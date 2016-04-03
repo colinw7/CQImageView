@@ -6,4 +6,7 @@ bin/
 obj/
 lib/
 
+src/Makefile
+test/Makefile
+
 .moc/
