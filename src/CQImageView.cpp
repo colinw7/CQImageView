@@ -143,8 +143,10 @@ mouseMoveEvent(QMouseEvent *e)
       emit imageMouseMove(ix, iy);
   }
 
-  if (pressed_)
-    view_.setOffset(view_.getOffset() + CIPoint2D(x - pressX_.value(), y - pressY_.value()));
+  if (pressed_) {
+    if (movable_)
+      view_.setOffset(view_.getOffset() + CIPoint2D(x - pressX_.value(), y - pressY_.value()));
+  }
 
   pressX_ = x;
   pressY_ = y;
@@ -164,7 +166,8 @@ mouseReleaseEvent(QMouseEvent *e)
   if (view_.pixelToImage(x, y, ix, iy))
     emit imageMouseRelease(ix, iy);
 
-  view_.setOffset(view_.getOffset() + CIPoint2D(x - pressX_.value(), y - pressY_.value()));
+  if (movable_)
+    view_.setOffset(view_.getOffset() + CIPoint2D(x - pressX_.value(), y - pressY_.value()));
 
   pressX_ = x;
   pressY_ = y;
@@ -180,12 +183,17 @@ keyPressEvent(QKeyEvent *e)
 {
   int key = e->key();
 
-  if      (key == Qt::Key_Left    ) view_.setOffset(view_.getOffset() + CIPoint2D(-1, 0));
-  else if (key == Qt::Key_Right   ) view_.setOffset(view_.getOffset() + CIPoint2D( 1, 0));
-  else if (key == Qt::Key_Down    ) view_.setOffset(view_.getOffset() + CIPoint2D(0, -1));
-  else if (key == Qt::Key_Up      ) view_.setOffset(view_.getOffset() + CIPoint2D(0,  1));
-  else if (key == Qt::Key_PageUp  ) view_.setScale (view_.getScale () + 1);
-  else if (key == Qt::Key_PageDown) view_.setScale (view_.getScale () - 1);
+  if (movable_) {
+    if      (key == Qt::Key_Left    ) view_.setOffset(view_.getOffset() + CIPoint2D(-1, 0));
+    else if (key == Qt::Key_Right   ) view_.setOffset(view_.getOffset() + CIPoint2D( 1, 0));
+    else if (key == Qt::Key_Down    ) view_.setOffset(view_.getOffset() + CIPoint2D(0, -1));
+    else if (key == Qt::Key_Up      ) view_.setOffset(view_.getOffset() + CIPoint2D(0,  1));
+  }
+
+  if (scalable_) {
+    if      (key == Qt::Key_PageUp  ) view_.setScale(view_.getScale() + 1);
+    else if (key == Qt::Key_PageDown) view_.setScale(view_.getScale() - 1);
+  }
 
   update();
 }

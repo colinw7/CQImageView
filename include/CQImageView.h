@@ -19,6 +19,12 @@ class CQImageView : public QWidget {
 
   void getImageColor(int x, int y, CRGBA &rgba);
 
+  bool isMovable() const { return movable_; }
+  void setMovable(bool b) { movable_ = b; }
+
+  bool isScalable() const { return scalable_; }
+  void setScalable(bool b) { scalable_ = b; }
+
   bool getGrid() const { return grid_; }
   void setGrid(bool b);
 
@@ -47,6 +53,8 @@ class CQImageView : public QWidget {
  private:
   CImageView view_;
   QImage     image_;
+  bool       movable_  { true };
+  bool       scalable_ { true };
   CBool      grid_;
   CInt       pressX_;
   CInt       pressY_;
