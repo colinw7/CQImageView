@@ -5,6 +5,6 @@ all:
 clean:
 	cd src; qmake; make clean
 	cd test; qmake; make clean
-	rm src/Makefile
-	rm test/Makefile
+	rm -f src/Makefile
+	rm -f test/Makefile
 	rm -f bin/CQImageView
