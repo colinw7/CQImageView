@@ -75,6 +75,8 @@ paintEvent(QPaintEvent *)
   QPainter painter(this);
 
   if (grid_) {
+    QColor bg = (! bg_.isValid() ? QColor(Qt::white) : bg_);
+
     int cs = 32;
     int nc = (width () + cs - 1)/cs;
     int nr = (height() + cs - 1)/cs;
@@ -88,9 +90,13 @@ paintEvent(QPaintEvent *)
         if ((r + c) & 1)
           painter.fillRect(QRect(x, y, cs, cs), QColor(200,200,200));
         else
-          painter.fillRect(QRect(x, y, cs, cs), Qt::white);
+          painter.fillRect(QRect(x, y, cs, cs), bg);
       }
     }
+  }
+  else {
+    if (bg_.isValid())
+      painter.fillRect(rect(), QColor(bg_));
   }
 
   CQImageViewRenderer renderer(&image_);

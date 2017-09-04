@@ -12,6 +12,11 @@
 class CQImageView : public QWidget {
   Q_OBJECT
 
+  Q_PROPERTY(bool   movable  READ isMovable  WRITE setMovable)
+  Q_PROPERTY(bool   scalable READ isScalable WRITE setScalable)
+  Q_PROPERTY(bool   grid     READ getGrid    WRITE setGrid)
+  Q_PROPERTY(QColor bg       READ bg         WRITE setBg)
+
  public:
   CQImageView(QWidget *parent=0);
 
@@ -30,6 +35,9 @@ class CQImageView : public QWidget {
 
   CImageView::Mode getMode() const;
   void setMode(CImageView::Mode mode);
+
+  const QColor &bg() const { return bg_; }
+  void setBg(const QColor &v) { bg_ = v; }
 
   // renderer use only
   void drawPoint(int x, int y, const CRGBA &rgba);
@@ -56,6 +64,7 @@ class CQImageView : public QWidget {
   bool       movable_  { true };
   bool       scalable_ { true };
   CBool      grid_;
+  QColor     bg_;
   CInt       pressX_;
   CInt       pressY_;
   CBool      pressed_;
