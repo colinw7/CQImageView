@@ -97,9 +97,9 @@ draw(CImageViewRenderer *renderer, uint w, uint h)
 
         getRGBAPixel(x, y, rgba);
 
-        for (int y1 = 0; y1 < scale_; ++y1)
-          for (int x1 = 0; x1 < scale_; ++x1)
-            renderer->drawPoint(ix + y1, iy + x1, rgba);
+        for (int yy1 = 0; yy1 < scale_; ++yy1)
+          for (int xx1 = 0; xx1 < scale_; ++xx1)
+            renderer->drawPoint(ix + yy1, iy + xx1, rgba);
       }
     }
   }
