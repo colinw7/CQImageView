@@ -34,3 +34,4 @@ INCLUDEPATH += \
 ../../CMath/include \
 ../../CStrUtil/include \
 ../../CUtil/include \
+../../COS/include \
