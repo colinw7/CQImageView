@@ -55,8 +55,8 @@ draw(CImageViewRenderer *renderer, uint w, uint h)
 
   if (w == 0 || h == 0) return;
 
-  int iw = image_->getWidth ();
-  int ih = image_->getHeight();
+  int iw = int(image_->getWidth ());
+  int ih = int(image_->getHeight());
 
   int x1 = 0, x2 = iw - 1;
   int y1 = 0, y2 = ih - 1;
@@ -86,12 +86,12 @@ draw(CImageViewRenderer *renderer, uint w, uint h)
     for (int y = y1; y <= y2; ++y) {
       int iy = y*scale_ + offset_.y;
 
-      if (iy < -scale_ || iy >= int(h + scale_)) continue;
+      if (iy < -scale_ || iy >= int(h) + scale_) continue;
 
       for (int x = x1; x <= x2; ++x) {
         int ix = x*scale_ + offset_.x;
 
-        if (ix < -scale_ || ix >= int(w + scale_)) continue;
+        if (ix < -scale_ || ix >= int(w) + scale_) continue;
 
         CRGBA rgba;
 
@@ -146,8 +146,8 @@ pixelToImage(int px, int py, int &ix, int &iy)
     iy = py - offset_.y;
   }
 
-  int iw = image_->getWidth ();
-  int ih = image_->getHeight();
+  int iw = int(image_->getWidth ());
+  int ih = int(image_->getHeight());
 
   if (ix < 0 || ix >= iw || iy < 0 || iy >= ih)
     return false;

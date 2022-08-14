@@ -103,7 +103,7 @@ paintEvent(QPaintEvent *)
 
   image_.fill(0);
 
-  view_.draw(&renderer, width(), height());
+  view_.draw(&renderer, uint(width()), uint(height()));
 
   painter.drawImage(0, 0, image_);
 }
