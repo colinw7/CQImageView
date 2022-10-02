@@ -6,7 +6,7 @@ TARGET = CQImageView
 
 DEPENDPATH += .
 
-QMAKE_CXXFLAGS += -std=c++14
+QMAKE_CXXFLAGS += -std=c++17
 
 CONFIG += staticlib
 
