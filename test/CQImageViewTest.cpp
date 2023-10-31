@@ -2,6 +2,7 @@
 #include <CQImageView.h>
 #include <CQApp.h>
 #include <CQUtil.h>
+#include <CQUtilRGBA.h>
 
 #include <QVBoxLayout>
 #include <QLabel>
@@ -41,14 +42,14 @@ CQImageViewTest()
 
   QFontMetrics fm(font());
 
-  control_->setFixedWidth(fm.width("XXXX,XXXX") + 16);
+  control_->setFixedWidth(fm.horizontalAdvance("XXXX,XXXX") + 16);
 
   QVBoxLayout *vlayout = new QVBoxLayout(control_);
   vlayout->setMargin(2); vlayout->setSpacing(2);
 
   colorLabel_ = new QLabel();
 
-  colorLabel_->setFixedSize(fm.width("XXXX,XXXX"), fm.height());
+  colorLabel_->setFixedSize(fm.horizontalAdvance("XXXX,XXXX"), fm.height());
 
   vlayout->addWidget(colorLabel_);
 

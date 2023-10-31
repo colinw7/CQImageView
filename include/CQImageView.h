@@ -18,7 +18,7 @@ class CQImageView : public QWidget {
   Q_PROPERTY(QColor bg       READ bg         WRITE setBg)
 
  public:
-  CQImageView(QWidget *parent=0);
+  CQImageView(QWidget *parent=nullptr);
 
   void setImage(CImagePtr image);
 

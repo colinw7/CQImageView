@@ -13,7 +13,7 @@ class CQImageViewRenderer : public CImageViewRenderer {
     height_ = image_->height();
   }
 
-  void drawPoint(int x, int y, const CRGBA &rgba);
+  void drawPoint(int x, int y, const CRGBA &rgba) override;
 
  private:
   QImage *image_;
