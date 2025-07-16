@@ -6,7 +6,7 @@ TARGET = CQImageViewTest
 
 DEPENDPATH += .
 
-QMAKE_CXXFLAGS += -std=c++14
+QMAKE_CXXFLAGS += -std=c++17
 
 MOC_DIR = .moc
 
@@ -36,15 +36,17 @@ INCLUDEPATH += \
 unix:LIBS += \
 -L../lib \
 -L../../CQUtil/lib \
--L../../CUtil/lib \
 -L../../CImageLib/lib \
 -L../../CFont/lib \
 -L../../CFile/lib \
+-L../../CFileUtil/lib \
+-L../../CMath/lib \
 -L../../CConfig/lib \
--L../../COS/lib \
 -L../../CStrUtil/lib \
+-L../../CUtil/lib \
+-L../../COS/lib \
 -L../../CRegExp/lib \
--lCQImageView -lCQUtil -lCUtil \
--lCImageLib -lCFont -lCFile -lCConfig -lCStrUtil -lCOS \
--lCRegExp \
+-lCQImageView -lCQUtil \
+-lCImageLib -lCFont -lCFile -lCFileUtil -lCMath -lCConfig -lCStrUtil \
+-lCUtil -lCOS -lCRegExp \
 -lpng -ljpeg -ltre

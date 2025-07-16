@@ -14,7 +14,7 @@ main(int argc, char **argv)
 {
   CQApp app(argc, argv);
 
-  CQImageViewTest *test = new CQImageViewTest;
+  auto *test = new CQImageViewTest;
 
   for (int i = 1; i < argc; ++i)
     test->addImage(argv[i]);
@@ -29,7 +29,7 @@ main(int argc, char **argv)
 CQImageViewTest::
 CQImageViewTest()
 {
-  QHBoxLayout *layout = new QHBoxLayout(this);
+  auto *layout = new QHBoxLayout(this);
   layout->setMargin(0); layout->setSpacing(0);
 
   view_ = new CQImageView;
@@ -44,7 +44,7 @@ CQImageViewTest()
 
   control_->setFixedWidth(fm.horizontalAdvance("XXXX,XXXX") + 16);
 
-  QVBoxLayout *vlayout = new QVBoxLayout(control_);
+  auto *vlayout = new QVBoxLayout(control_);
   vlayout->setMargin(2); vlayout->setSpacing(2);
 
   colorLabel_ = new QLabel();
@@ -69,13 +69,13 @@ CQImageViewTest()
 
   //---
 
-  QPushButton *grayButton = new QPushButton("Gray");
+  auto *grayButton = new QPushButton("Gray");
 
   connect(grayButton, SIGNAL(clicked()), this, SLOT(graySlot()));
 
   vlayout->addWidget(grayButton);
 
-  QPushButton *sepiaButton = new QPushButton("Sepia");
+  auto *sepiaButton = new QPushButton("Sepia");
 
   connect(sepiaButton, SIGNAL(clicked()), this, SLOT(sepiaSlot()));
 
@@ -83,19 +83,19 @@ CQImageViewTest()
 
   //---
 
-  QPushButton *redButton = new QPushButton("Red");
+  auto *redButton = new QPushButton("Red");
 
   connect(redButton, SIGNAL(clicked()), this, SLOT(redSlot()));
 
   vlayout->addWidget(redButton);
 
-  QPushButton *greenButton = new QPushButton("Green");
+  auto *greenButton = new QPushButton("Green");
 
   connect(greenButton, SIGNAL(clicked()), this, SLOT(greenSlot()));
 
   vlayout->addWidget(greenButton);
 
-  QPushButton *blueButton = new QPushButton("Blue");
+  auto *blueButton = new QPushButton("Blue");
 
   connect(blueButton, SIGNAL(clicked()), this, SLOT(blueSlot()));
 
@@ -123,9 +123,7 @@ addImage(const char *fileName)
   CImageFileSrc src(fileName);
 
   CImagePtr image = CImageMgrInst->createImage(src);
-
-  if (! image.isValid())
-    return;
+  if (! image) return;
 
   names_ .push_back(fileName);
   images_.push_back(image);

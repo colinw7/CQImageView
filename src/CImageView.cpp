@@ -51,7 +51,7 @@ void
 CImageView::
 draw(CImageViewRenderer *renderer, uint w, uint h)
 {
-  if (! image_.isValid()) return;
+  if (! image_) return;
 
   if (w == 0 || h == 0) return;
 
