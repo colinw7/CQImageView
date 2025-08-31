@@ -15,7 +15,8 @@ class CImageView {
     SEPIA,
     RED,
     GREEN,
-    BLUE
+    BLUE,
+    ALPHA
   };
 
  public:
@@ -23,14 +24,13 @@ class CImageView {
 
   virtual ~CImageView() { }
 
+  const CImagePtr &getImage() const { return image_; }
   void setImage(CImagePtr image);
 
   int getScale() const { return scale_; }
-
   void setScale(int scale);
 
   const CIPoint2D &getOffset() const { return offset_; }
-
   void setOffset(const CIPoint2D &offset);
 
   void getImageColor(int x, int y, CRGBA &rgba);
@@ -52,6 +52,8 @@ class CImageView {
   CIPoint2D offset_ { 0, 0 }; // offset
   Mode      mode_   { Mode::NORMAL };
 };
+
+//---
 
 class CImageViewRenderer {
  public:

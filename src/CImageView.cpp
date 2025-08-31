@@ -177,4 +177,12 @@ getRGBAPixel(int x, int y, CRGBA &rgba)
     rgba.setRed  (0);
     rgba.setGreen(0);
   }
+  else if (mode_ == Mode::ALPHA) {
+    auto a = rgba.getAlpha();
+
+    rgba.setRed  (a);
+    rgba.setGreen(a);
+    rgba.setBlue (a);
+    rgba.setAlpha(1.0);
+  }
 }

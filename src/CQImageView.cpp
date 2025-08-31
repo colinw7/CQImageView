@@ -16,8 +16,9 @@ class CQImageViewRenderer : public CImageViewRenderer {
   void drawPoint(int x, int y, const CRGBA &rgba) override;
 
  private:
-  QImage *image_;
-  int     width_, height_;
+  QImage *image_  { nullptr };
+  int     width_  { 0 };
+  int     height_ { 0 };
 };
 
 CQImageView::
@@ -54,6 +55,15 @@ setGrid(bool b)
 
 void
 CQImageView::
+setAutoSize(bool b)
+{
+  autoSize_ = b;
+
+  update();
+}
+
+void
+CQImageView::
 setMode(CImageView::Mode mode)
 {
   view_.setMode(mode);
@@ -74,8 +84,12 @@ paintEvent(QPaintEvent *)
 {
   QPainter painter(this);
 
+  //---
+
+  // draw background
+  //   grid or solid color
   if (grid_) {
-    QColor bg = (! bg_.isValid() ? QColor(Qt::white) : bg_);
+    auto bg = (! bg_.isValid() ? QColor(Qt::white) : bg_);
 
     int cs = 32;
     int nc = (width () + cs - 1)/cs;
@@ -99,13 +113,28 @@ paintEvent(QPaintEvent *)
       painter.fillRect(rect(), QColor(bg_));
   }
 
-  CQImageViewRenderer renderer(&image_);
+  //---
 
-  image_.fill(0);
+  if (getAutoSize()) {
+    auto *qimage = dynamic_cast<CQImage *>(view_.getImage().get());
 
-  view_.draw(&renderer, uint(width()), uint(height()));
+    if (getNeedsSize()) {
+      qimage_ = qimage->getQImage().scaled(width(), height(), Qt::KeepAspectRatio);
 
-  painter.drawImage(0, 0, image_);
+      setNeedsSize(false);
+    }
+
+    painter.drawImage(0, 0, qimage_);
+  }
+  else {
+    CQImageViewRenderer renderer(&image_);
+
+    image_.fill(0);
+
+    view_.draw(&renderer, uint(width()), uint(height()));
+
+    painter.drawImage(0, 0, image_);
+  }
 }
 
 void
@@ -113,6 +142,8 @@ CQImageView::
 resizeEvent(QResizeEvent *)
 {
   image_ = QImage(width(), height(), QImage::Format_ARGB32);
+
+  setNeedsSize(true);
 }
 
 void
@@ -151,7 +182,7 @@ mouseMoveEvent(QMouseEvent *e)
 
   if (pressed_) {
     if (movable_)
-      view_.setOffset(view_.getOffset() + CIPoint2D(x - pressX_.value(), y - pressY_.value()));
+      view_.setOffset(view_.getOffset() + CIPoint2D(x - pressX_, y - pressY_));
   }
 
   pressX_ = x;
@@ -173,7 +204,7 @@ mouseReleaseEvent(QMouseEvent *e)
     emit imageMouseRelease(ix, iy);
 
   if (movable_)
-    view_.setOffset(view_.getOffset() + CIPoint2D(x - pressX_.value(), y - pressY_.value()));
+    view_.setOffset(view_.getOffset() + CIPoint2D(x - pressX_, y - pressY_));
 
   pressX_ = x;
   pressY_ = y;

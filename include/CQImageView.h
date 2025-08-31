@@ -1,21 +1,21 @@
 #ifndef CQImageView_H
 #define CQImageView_H
 
-#include <QWidget>
-#include <QImage>
-
-#include <CBool.h>
-#include <CInt.h>
+#include <CQImage.h>
 #include <CImageLib.h>
 #include <CImageView.h>
+
+#include <QWidget>
+#include <QImage>
 
 class CQImageView : public QWidget {
   Q_OBJECT
 
-  Q_PROPERTY(bool   movable  READ isMovable  WRITE setMovable)
-  Q_PROPERTY(bool   scalable READ isScalable WRITE setScalable)
-  Q_PROPERTY(bool   grid     READ getGrid    WRITE setGrid)
-  Q_PROPERTY(QColor bg       READ bg         WRITE setBg)
+  Q_PROPERTY(bool   movable  READ isMovable   WRITE setMovable)
+  Q_PROPERTY(bool   scalable READ isScalable  WRITE setScalable)
+  Q_PROPERTY(bool   grid     READ getGrid     WRITE setGrid)
+  Q_PROPERTY(bool   autoSize READ getAutoSize WRITE setAutoSize)
+  Q_PROPERTY(QColor bg       READ bg          WRITE setBg)
 
  public:
   CQImageView(QWidget *parent=nullptr);
@@ -32,6 +32,12 @@ class CQImageView : public QWidget {
 
   bool getGrid() const { return grid_; }
   void setGrid(bool b);
+
+  bool getAutoSize() const { return autoSize_; }
+  void setAutoSize(bool b);
+
+  bool getNeedsSize() const { return needsSize_; }
+  void setNeedsSize(bool b) { needsSize_ = b; }
 
   CImageView::Mode getMode() const;
   void setMode(CImageView::Mode mode);
@@ -61,13 +67,16 @@ class CQImageView : public QWidget {
  private:
   CImageView view_;
   QImage     image_;
-  bool       movable_  { true };
-  bool       scalable_ { true };
-  CBool      grid_;
+  QImage     qimage_;
+  bool       movable_   { true };
+  bool       scalable_  { true };
+  bool       grid_      { false };
+  bool       autoSize_  { false };
+  bool       needsSize_ { true };
   QColor     bg_;
-  CInt       pressX_;
-  CInt       pressY_;
-  CBool      pressed_;
+  int        pressX_    { 0 };
+  int        pressY_    { 0 };
+  bool       pressed_   { false };
 };
 
 #endif

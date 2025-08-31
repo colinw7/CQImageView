@@ -27,25 +27,29 @@ class CQImageViewTest : public QDialog {
 
   void graySlot();
   void sepiaSlot();
+
   void redSlot();
   void greenSlot();
   void blueSlot();
+  void alphaSlot();
 
   void gridSlot();
+  void autoSizeSlot();
 
   void updateState();
 
  private:
-  typedef std::vector<std::string> NameList;
-  typedef std::vector<CImagePtr>   ImageList;
+  using NameList  = std::vector<std::string>;
+  using ImageList = std::vector<CImagePtr>;
 
-  QFrame      *control_    { 0 };
-  CQImageView *view_       { 0 };
-  QLabel      *colorLabel_ { 0 };
-  QPushButton *nextButton_;
-  QPushButton *prevButton_;
-  QCheckBox   *gridCheck_;
-  int          imageNum_   { 0 };
+  QFrame      *control_       { nullptr };
+  CQImageView *view_          { nullptr };
+  QLabel      *colorLabel_    { nullptr };
+  QPushButton *nextButton_    { nullptr };
+  QPushButton *prevButton_    { nullptr };
+  QCheckBox   *gridCheck_     { nullptr };
+  QCheckBox   *autoSizeCheck_ { nullptr };
+  int          imageNum_      { 0 };
   NameList     names_;
   ImageList    images_;
 };

@@ -42,7 +42,7 @@ CQImageViewTest()
 
   QFontMetrics fm(font());
 
-  control_->setFixedWidth(fm.horizontalAdvance("XXXX,XXXX") + 16);
+  control_->setFixedWidth(fm.horizontalAdvance("XXXX,XXXX") + 32);
 
   auto *vlayout = new QVBoxLayout(control_);
   vlayout->setMargin(2); vlayout->setSpacing(2);
@@ -101,6 +101,12 @@ CQImageViewTest()
 
   vlayout->addWidget(blueButton);
 
+  auto *alphaButton = new QPushButton("Alpha");
+
+  connect(alphaButton, SIGNAL(clicked()), this, SLOT(alphaSlot()));
+
+  vlayout->addWidget(alphaButton);
+
   //---
 
   gridCheck_ = new QCheckBox("Grid");
@@ -108,6 +114,14 @@ CQImageViewTest()
   connect(gridCheck_, SIGNAL(stateChanged(int)), this, SLOT(gridSlot()));
 
   vlayout->addWidget(gridCheck_);
+
+  //---
+
+  autoSizeCheck_ = new QCheckBox("Auto Size");
+
+  connect(autoSizeCheck_, SIGNAL(stateChanged(int)), this, SLOT(autoSizeSlot()));
+
+  vlayout->addWidget(autoSizeCheck_);
 
   //---
 
@@ -144,7 +158,10 @@ loadImage()
 
   view_->setImage(image);
 
-  view_->resize(image->getWidth(), image->getHeight());
+  if (! view_->getAutoSize())
+    view_->resize(image->getWidth(), image->getHeight());
+  else
+    view_->setNeedsSize(true);
 
   view_->update();
 
@@ -255,9 +272,28 @@ blueSlot()
 
 void
 CQImageViewTest::
+alphaSlot()
+{
+  CImageView::Mode mode = view_->getMode();
+
+  if (mode == CImageView::Mode::ALPHA)
+    view_->setMode(CImageView::Mode::NORMAL);
+  else
+    view_->setMode(CImageView::Mode::ALPHA);
+}
+
+void
+CQImageViewTest::
 gridSlot()
 {
   view_->setGrid(gridCheck_->isChecked());
+}
+
+void
+CQImageViewTest::
+autoSizeSlot()
+{
+  view_->setAutoSize(autoSizeCheck_->isChecked());
 }
 
 void
