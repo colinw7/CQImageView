@@ -1,13 +1,22 @@
 #include <CQImageViewTest.h>
 #include <CQImageView.h>
+
+#include <CQIconButton.h>
+#include <CQRealSpin.h>
+#include <CQIntegerSpin.h>
 #include <CQApp.h>
 #include <CQUtil.h>
 #include <CQUtilRGBA.h>
+#include <CFileUtil.h>
 
 #include <QVBoxLayout>
 #include <QLabel>
 #include <QPushButton>
 #include <QCheckBox>
+
+#include <svg/prev_svg.h>
+#include <svg/next_svg.h>
+#include <svg/settings_svg.h>
 
 int
 main(int argc, char **argv)
@@ -23,126 +32,323 @@ main(int argc, char **argv)
 
   test->show();
 
+  test->updateSize();
+
   return app.exec();
 }
 
 CQImageViewTest::
 CQImageViewTest()
 {
-  auto *layout = new QHBoxLayout(this);
+  auto *layout = new QVBoxLayout(this);
   layout->setMargin(0); layout->setSpacing(0);
 
+  //---
+
+  createToolBar();
+
+  layout->addWidget(toolbarWidgets_.frame);
+
+  //---
+
+  auto *clayout = new QHBoxLayout;
+  clayout->setMargin(0); clayout->setSpacing(0);
+
+  layout->addLayout(clayout);
+
+  //---
+
+  // image view
   view_ = new CQImageView;
 
   connect(view_, SIGNAL(imageMouseMove(int, int)), this, SLOT(imagePositionSlot(int, int)));
 
-  layout->addWidget(view_);
+  connect(view_, SIGNAL(scaleChanged()), this, SLOT(scaleViewSlot()));
 
-  control_ = new QFrame;
-
-  QFontMetrics fm(font());
-
-  control_->setFixedWidth(fm.horizontalAdvance("XXXX,XXXX") + 32);
-
-  auto *vlayout = new QVBoxLayout(control_);
-  vlayout->setMargin(2); vlayout->setSpacing(2);
-
-  colorLabel_ = new QLabel();
-
-  colorLabel_->setFixedSize(fm.horizontalAdvance("XXXX,XXXX"), fm.height());
-
-  vlayout->addWidget(colorLabel_);
+  clayout->addWidget(view_);
 
   //---
 
-  nextButton_ = new QPushButton("Next");
+  createControlFrame();
 
-  connect(nextButton_, SIGNAL(clicked()), this, SLOT(nextSlot()));
+  clayout->addWidget(controlWidgets_.frame);
 
-  vlayout->addWidget(nextButton_);
-
-  prevButton_ = new QPushButton("Prev");
-
-  connect(prevButton_, SIGNAL(clicked()), this, SLOT(prevSlot()));
-
-  vlayout->addWidget(prevButton_);
+  controlWidgets_.frame->setVisible(false);
 
   //---
 
-  auto *grayButton = new QPushButton("Gray");
+  createStatus();
 
-  connect(grayButton, SIGNAL(clicked()), this, SLOT(graySlot()));
-
-  vlayout->addWidget(grayButton);
-
-  auto *sepiaButton = new QPushButton("Sepia");
-
-  connect(sepiaButton, SIGNAL(clicked()), this, SLOT(sepiaSlot()));
-
-  vlayout->addWidget(sepiaButton);
-
-  //---
-
-  auto *redButton = new QPushButton("Red");
-
-  connect(redButton, SIGNAL(clicked()), this, SLOT(redSlot()));
-
-  vlayout->addWidget(redButton);
-
-  auto *greenButton = new QPushButton("Green");
-
-  connect(greenButton, SIGNAL(clicked()), this, SLOT(greenSlot()));
-
-  vlayout->addWidget(greenButton);
-
-  auto *blueButton = new QPushButton("Blue");
-
-  connect(blueButton, SIGNAL(clicked()), this, SLOT(blueSlot()));
-
-  vlayout->addWidget(blueButton);
-
-  auto *alphaButton = new QPushButton("Alpha");
-
-  connect(alphaButton, SIGNAL(clicked()), this, SLOT(alphaSlot()));
-
-  vlayout->addWidget(alphaButton);
-
-  //---
-
-  gridCheck_ = new QCheckBox("Grid");
-
-  connect(gridCheck_, SIGNAL(stateChanged(int)), this, SLOT(gridSlot()));
-
-  vlayout->addWidget(gridCheck_);
-
-  //---
-
-  autoSizeCheck_ = new QCheckBox("Auto Size");
-
-  connect(autoSizeCheck_, SIGNAL(stateChanged(int)), this, SLOT(autoSizeSlot()));
-
-  vlayout->addWidget(autoSizeCheck_);
-
-  //---
-
-  vlayout->addStretch();
-
-  layout->addWidget(control_);
+  layout->addWidget(statusWidgets_.frame);
 }
 
 void
 CQImageViewTest::
+createToolBar()
+{
+  toolbarWidgets_.frame = new QFrame;
+
+  toolbarWidgets_.frame->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+
+  auto *layout = new QHBoxLayout(toolbarWidgets_.frame);
+  layout->setMargin(0); layout->setSpacing(0);
+
+  //---
+
+  auto addToolButton = [&](const QString &name, const QString &iconName, const QString &tip) {
+    auto *button = new CQIconButton;
+
+    button->setFocusPolicy(Qt::NoFocus);
+
+    button->setObjectName(name);
+    button->setIcon(iconName);
+    button->setIconSize(QSize(32, 32));
+    button->setAutoRaise(true);
+    button->setToolTip(tip);
+
+    layout->addWidget(button);
+
+    return button;
+  };
+
+  auto addCheckButton = [&](const QString &name, const QString &iconName, const QString &tip) {
+    auto *button = addToolButton(name, iconName, tip);
+
+    button->setCheckable(true);
+
+    return button;
+  };
+
+  auto addCheck = [&](const QString &name, const char *slotName, const QString &tip) {
+    auto *check = new QCheckBox(name);
+
+    check->setObjectName(name);
+    check->setToolTip(tip);
+
+    connect(check, SIGNAL(stateChanged(int)), this, slotName);
+
+    layout->addWidget(check);
+
+    return check;
+  };
+
+#if 0
+  auto addRealSpin = [&](const QString &name, const char *slotName) {
+    auto *frame = new QFrame;
+
+    auto *layout1 = new QHBoxLayout(frame);
+    layout1->setMargin(0); layout1->setSpacing(2);
+
+    auto *label = new QLabel(name);
+    auto *spin  = new CQRealSpin;
+
+    layout1->addWidget(label);
+    layout1->addWidget(spin);
+
+    connect(spin, SIGNAL(realValueChanged(double)), this, slotName);
+
+    layout->addWidget(frame);
+
+    return spin;
+  };
+#endif
+
+  auto addIntegerSpin = [&](const QString &name, const char *slotName) {
+    auto *frame = new QFrame;
+
+    auto *layout1 = new QHBoxLayout(frame);
+    layout1->setMargin(0); layout1->setSpacing(2);
+
+    auto *label = new QLabel(name);
+    auto *spin  = new CQIntegerSpin;
+
+    layout1->addWidget(label);
+    layout1->addWidget(spin);
+
+    connect(spin, SIGNAL(valueChanged(int)), this, slotName);
+
+    layout->addWidget(frame);
+
+    return spin;
+  };
+
+  //---
+
+  toolbarWidgets_.prevButton = addToolButton("prev", "PREV", "Prev");
+  toolbarWidgets_.nextButton = addToolButton("next", "NEXT", "Next");
+
+  connect(toolbarWidgets_.prevButton, SIGNAL(clicked()), this, SLOT(prevSlot()));
+  connect(toolbarWidgets_.nextButton, SIGNAL(clicked()), this, SLOT(nextSlot()));
+
+  //---
+
+  layout->addStretch(1);
+
+  //---
+
+  //toolbarWidgets_.scaleSpin = addRealSpin("Scale", SLOT(scaleSlot(double)));
+  toolbarWidgets_.scaleSpin = addIntegerSpin("Scale", SLOT(scaleSlot(int)));
+
+  addCheck("Grid"      , SLOT(gridSlot(int)), "Show background grid");
+  addCheck("Auto Size" , SLOT(autoSizeSlot(int)), "Size image to window");
+  addCheck("Auto Scale", SLOT(autoScaleSlot(int)), "Size window to image");
+
+  //---
+
+  toolbarWidgets_.settingsButton = addCheckButton("settings", "SETTINGS", "Settings");
+
+  connect(toolbarWidgets_.settingsButton, SIGNAL(toggled(bool)), this, SLOT(settingsSlot(bool)));
+}
+
+void
+CQImageViewTest::
+createControlFrame()
+{
+  // control frame
+  controlWidgets_.frame = new QFrame;
+
+  controlWidgets_.frame->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
+
+  QFontMetrics fm(font());
+
+  controlWidgets_.frame->setFixedWidth(fm.horizontalAdvance("XXXX,XXXX") + 32);
+
+  auto *vlayout = new QVBoxLayout(controlWidgets_.frame);
+  vlayout->setMargin(2); vlayout->setSpacing(2);
+
+  //---
+
+  auto addButton = [&](const QString &name, const char *slotName) {
+    auto *button = new QPushButton(name);
+
+    connect(button, SIGNAL(clicked()), this, slotName);
+
+    vlayout->addWidget(button);
+
+    return button;
+  };
+
+#if 0
+  auto addCheck = [&](const QString &name, const char *slotName) {
+    auto *check = new QCheckBox(name);
+
+    connect(check, SIGNAL(stateChanged(int)), this, slotName);
+
+    vlayout->addWidget(check);
+
+    return check;
+  };
+#endif
+
+  //---
+
+#if 0
+  controlWidgets_.nextButton = addButton("Next", SLOT(nextSlot()));
+  controlWidgets_.prevButton = addButton("Prev", SLOT(prevSlot()));
+#endif
+
+  //---
+
+  addButton("Gray" , SLOT(graySlot()));
+  addButton("Sepia", SLOT(sepiaSlot()));
+
+  //---
+
+  addButton("Red"  , SLOT(redSlot()));
+  addButton("Green", SLOT(greenSlot()));
+  addButton("Blue" , SLOT(blueSlot()));
+
+  addButton("Alpha", SLOT(alphaSlot()));
+
+  //---
+
+#if 0
+  addCheck("Grid"     , SLOT(gridSlot(int)));
+  addCheck("Auto Size", SLOT(autoSizeSlot(int)));
+#endif
+
+  //---
+
+  vlayout->addStretch();
+}
+
+void
+CQImageViewTest::
+createStatus()
+{
+  statusWidgets_.frame = new QFrame;
+  auto *slayout = new QHBoxLayout(statusWidgets_.frame);
+
+  statusWidgets_.frame->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+
+  statusWidgets_.nameLabel = new QLabel(" ");
+  statusWidgets_.sizeLabel = new QLabel(" ");
+
+  statusWidgets_.nameLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+
+  statusWidgets_.nameLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
+
+  slayout->addWidget(statusWidgets_.nameLabel);
+  slayout->addWidget(statusWidgets_.sizeLabel);
+
+  //---
+
+  QFontMetrics fm(font());
+
+  statusWidgets_.colorLabel = new QLabel();
+
+  statusWidgets_.colorLabel->setFixedSize(fm.horizontalAdvance("XXXX,XXXX"), fm.height());
+
+  slayout->addWidget(statusWidgets_.colorLabel);
+}
+
+void
+CQImageViewTest::
+resizeEvent(QResizeEvent *)
+{
+  if (! sizeInited_)
+    return;
+
+  if (! view_->getAutoScale() && ! view_->getAutoSize()) {
+    viewWidth_  = view_->width ();
+    viewHeight_ = view_->height();
+  }
+}
+
+bool
+CQImageViewTest::
 addImage(const char *fileName)
 {
-  CImageFileSrc src(fileName);
+  CFile file(fileName);
 
-  CImagePtr image = CImageMgrInst->createImage(src);
-  if (! image) return;
+  if (file.isDirectory()) {
+    std::cerr << "File: '" << fileName << "' is not an image\n";
+    return false;
+  };
 
-  names_ .push_back(fileName);
-  images_.push_back(image);
+  auto isImage = [&]() {
+    auto type = CFileUtil::getImageType(&file);
+
+    if (type == CFILE_TYPE_NONE)
+      type = CFileUtil::getImageTypeFromName(fileName);
+
+    return (type != CFILE_TYPE_NONE);
+  };
+
+  if (! isImage()) {
+    std::cerr << "File: '" << fileName << "' is not an image\n";
+    return false;
+  }
+
+  ImageData data;
+
+  data.fileName = fileName;
+
+  images_.push_back(data);
 
   updateState();
+
+  return true;
 }
 
 void
@@ -152,22 +358,90 @@ loadImage()
   if (imageNum_ < 0 || imageNum_ >= int(images_.size()))
     return;
 
-  const std::string &name = names_[imageNum_];
+  auto &data = images_[imageNum_];
 
-  CImagePtr image = images_[imageNum_];
+  if (! data.loaded) {
+    CImageFileSrc src(data.fileName);
 
-  view_->setImage(image);
+    data.image = CImageMgrInst->createImage(src);
 
-  if (! view_->getAutoSize())
-    view_->resize(image->getWidth(), image->getHeight());
-  else
-    view_->setNeedsSize(true);
+    data.valid  = !!data.image;
+    data.loaded = true;
+
+    if (! data.valid)
+      std::cerr << "Failed to load '" << data.fileName << "'\n";
+  }
+
+  auto name = QString::fromStdString(data.fileName);
+
+  int w = data.image->getWidth();
+  int h = data.image->getHeight();
+
+  view_->setImage(data.image);
+
+  // resize window to match image size
+  if (view_->getAutoScale()) {
+    view_->resize(w, h);
+
+    viewWidth_  = w;
+    viewHeight_ = h;
+  }
+  else {
+    // view_->setNeedsSize(true);
+
+    if (viewWidth_ < 0) {
+      viewWidth_  = w;
+      viewHeight_ = h;
+    }
+  }
 
   view_->update();
 
-  resize(view_->width() + control_->width(), view_->height());
+  statusWidgets_.nameLabel->setText(name);
 
-  setWindowTitle(name.c_str());
+  auto sizeStr = QString("%1 x %2").arg(w).arg(h);
+
+  QFontMetrics fm(statusWidgets_.sizeLabel->font());
+
+  statusWidgets_.sizeLabel->setText(sizeStr);
+  statusWidgets_.sizeLabel->setFixedSize(fm.horizontalAdvance(sizeStr) + 32, fm.height());
+
+  //---
+
+  if (! view_->getAutoSize()) {
+    if (sizeInited_)
+      updateSize();
+  }
+
+  //---
+
+  setWindowTitle(name);
+}
+
+void
+CQImageViewTest::
+updateSize()
+{
+  int w1 = viewWidth_;
+  int h1 = viewHeight_;
+
+  if (w1 < 0) {
+    w1 = 1024;
+    h1 = 1024;
+  }
+
+  if (controlWidgets_.frame && controlWidgets_.frame->isVisible())
+    w1 += controlWidgets_.frame->width();
+
+  if (toolbarWidgets_.frame)
+    h1 += toolbarWidgets_.frame->height();
+
+  if (statusWidgets_.frame)
+    h1 += statusWidgets_.frame->height();
+
+  resize(w1, h1);
+
+  sizeInited_ = true;
 }
 
 void
@@ -178,10 +452,17 @@ imagePositionSlot(int x, int y)
 
   view_->getImageColor(x, y, rgba);
 
-  CQUtil::setBackground(colorLabel_, CQUtil::rgbaToColor(rgba));
-  CQUtil::setForeground(colorLabel_, CQUtil::rgbaToColor(rgba.bwColor()));
+  CQUtil::setBackground(statusWidgets_.colorLabel, CQUtil::rgbaToColor(rgba));
+  CQUtil::setForeground(statusWidgets_.colorLabel, CQUtil::rgbaToColor(rgba.bwColor()));
 
-  colorLabel_->setText(QString("%1, %2").arg(x).arg(y));
+  statusWidgets_.colorLabel->setText(QString("%1, %2").arg(x).arg(y));
+}
+
+void
+CQImageViewTest::
+scaleViewSlot()
+{
+  toolbarWidgets_.scaleSpin->setValue(view_->getScale());
 }
 
 void
@@ -284,22 +565,53 @@ alphaSlot()
 
 void
 CQImageViewTest::
-gridSlot()
+scaleSlot(int scale)
 {
-  view_->setGrid(gridCheck_->isChecked());
+  view_->setScale(scale);
 }
 
 void
 CQImageViewTest::
-autoSizeSlot()
+gridSlot(int i)
 {
-  view_->setAutoSize(autoSizeCheck_->isChecked());
+  view_->setGrid(i);
+}
+
+void
+CQImageViewTest::
+autoSizeSlot(int i)
+{
+  view_->setAutoSize(i);
+}
+
+void
+CQImageViewTest::
+autoScaleSlot(int i)
+{
+  view_->setAutoScale(i);
+}
+
+void
+CQImageViewTest::
+settingsSlot(bool b)
+{
+  viewWidth_  = view_->width ();
+  viewHeight_ = view_->height();
+
+  controlWidgets_.frame->setVisible(b);
+
+  updateSize();
 }
 
 void
 CQImageViewTest::
 updateState()
 {
-  prevButton_->setEnabled(imageNum_ > 0);
-  nextButton_->setEnabled(imageNum_ < int(images_.size()) - 1);
+  toolbarWidgets_.prevButton->setEnabled(imageNum_ > 0);
+  toolbarWidgets_.nextButton->setEnabled(imageNum_ < int(images_.size()) - 1);
+
+#if 0
+  controlWidgets_.prevButton->setEnabled(imageNum_ > 0);
+  controlWidgets_.nextButton->setEnabled(imageNum_ < int(images_.size()) - 1);
+#endif
 }

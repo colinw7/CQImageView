@@ -1,6 +1,7 @@
 #include <CQImageView.h>
 #include <CQUtil.h>
 
+#include <QMenu>
 #include <QPainter>
 #include <QKeyEvent>
 #include <QMouseEvent>
@@ -28,6 +29,8 @@ CQImageView(QWidget *parent) :
   setFocusPolicy(Qt::StrongFocus);
 
   setMouseTracking(true);
+
+  setContextMenuPolicy(Qt::DefaultContextMenu);
 }
 
 void
@@ -35,6 +38,10 @@ CQImageView::
 setImage(CImagePtr image)
 {
   view_.setImage(image);
+
+  view_.setOffset(CIPoint2D(0, 0));
+
+  imageValid_ = false;
 }
 
 void
@@ -58,6 +65,15 @@ CQImageView::
 setAutoSize(bool b)
 {
   autoSize_ = b;
+
+  update();
+}
+
+void
+CQImageView::
+setAutoScale(bool b)
+{
+  autoScale_ = b;
 
   update();
 }
@@ -117,16 +133,20 @@ paintEvent(QPaintEvent *)
 
   if (getAutoSize()) {
     auto *qimage = dynamic_cast<CQImage *>(view_.getImage().get());
+    if (! qimage) return;
 
-    if (getNeedsSize()) {
+    if (getNeedsSize() || ! imageValid_) {
       qimage_ = qimage->getQImage().scaled(width(), height(), Qt::KeepAspectRatio);
 
       setNeedsSize(false);
+
+      imageValid_ = true;
     }
 
     painter.drawImage(0, 0, qimage_);
   }
   else {
+    // full size image
     CQImageViewRenderer renderer(&image_);
 
     image_.fill(0);
@@ -150,18 +170,20 @@ void
 CQImageView::
 mousePressEvent(QMouseEvent *e)
 {
-  int x = e->pos().x();
-  int y = e->pos().y();
+  if (e->button() == Qt::LeftButton) {
+    int x = e->pos().x();
+    int y = e->pos().y();
 
-  pressX_ = x;
-  pressY_ = y;
+    pressX_ = x;
+    pressY_ = y;
 
-  int ix, iy;
+    int ix, iy;
 
-  if (view_.pixelToImage(x, y, ix, iy))
-    emit imageMousePress(ix, iy);
+    if (view_.pixelToImage(x, y, ix, iy))
+      Q_EMIT imageMousePress(ix, iy);
 
-  pressed_ = true;
+    pressed_ = true;
+  }
 }
 
 void
@@ -175,9 +197,9 @@ mouseMoveEvent(QMouseEvent *e)
 
   if (view_.pixelToImage(x, y, ix, iy)) {
     if (pressed_)
-      emit imageMouseDrag(ix, iy);
+      Q_EMIT imageMouseDrag(ix, iy);
     else
-      emit imageMouseMove(ix, iy);
+      Q_EMIT imageMouseMove(ix, iy);
   }
 
   if (pressed_) {
@@ -195,23 +217,25 @@ void
 CQImageView::
 mouseReleaseEvent(QMouseEvent *e)
 {
-  int x = e->pos().x();
-  int y = e->pos().y();
+  if (pressed_) {
+    int x = e->pos().x();
+    int y = e->pos().y();
 
-  int ix, iy;
+    int ix, iy;
 
-  if (view_.pixelToImage(x, y, ix, iy))
-    emit imageMouseRelease(ix, iy);
+    if (view_.pixelToImage(x, y, ix, iy))
+      Q_EMIT imageMouseRelease(ix, iy);
 
-  if (movable_)
-    view_.setOffset(view_.getOffset() + CIPoint2D(x - pressX_, y - pressY_));
+    if (movable_)
+      view_.setOffset(view_.getOffset() + CIPoint2D(x - pressX_, y - pressY_));
 
-  pressX_ = x;
-  pressY_ = y;
+    pressX_ = x;
+    pressY_ = y;
 
-  update();
+    update();
 
-  pressed_ = false;
+    pressed_ = false;
+  }
 }
 
 void
@@ -220,19 +244,73 @@ keyPressEvent(QKeyEvent *e)
 {
   int key = e->key();
 
-  if (movable_) {
-    if      (key == Qt::Key_Left    ) view_.setOffset(view_.getOffset() + CIPoint2D(-1, 0));
-    else if (key == Qt::Key_Right   ) view_.setOffset(view_.getOffset() + CIPoint2D( 1, 0));
-    else if (key == Qt::Key_Down    ) view_.setOffset(view_.getOffset() + CIPoint2D(0, -1));
-    else if (key == Qt::Key_Up      ) view_.setOffset(view_.getOffset() + CIPoint2D(0,  1));
+  if (isMovable()) {
+    // pan image
+    if      (key == Qt::Key_Left ) setOffset(view_.getOffset() + CIPoint2D(-1, 0));
+    else if (key == Qt::Key_Right) setOffset(view_.getOffset() + CIPoint2D( 1, 0));
+    else if (key == Qt::Key_Down ) setOffset(view_.getOffset() + CIPoint2D(0, -1));
+    else if (key == Qt::Key_Up   ) setOffset(view_.getOffset() + CIPoint2D(0,  1));
   }
 
-  if (scalable_) {
-    if      (key == Qt::Key_PageUp  ) view_.setScale(view_.getScale() + 1);
-    else if (key == Qt::Key_PageDown) view_.setScale(view_.getScale() - 1);
+  if (isScalable()) {
+    // scale image
+    if      (key == Qt::Key_PageUp  ) setScale(view_.getScale() + 1);
+    else if (key == Qt::Key_PageDown) setScale(view_.getScale() - 1);
   }
 
   update();
+}
+
+void
+CQImageView::
+contextMenuEvent(QContextMenuEvent *e)
+{
+  auto *menu = new QMenu;
+
+  auto *action = menu->addAction("Reset Position");
+  connect(action, SIGNAL(triggered()), this, SLOT(resetPositionSlot()));
+
+  (void) menu->exec(e->globalPos());
+
+  delete menu;
+}
+
+void
+CQImageView::
+resetPositionSlot()
+{
+  view_.setOffset(CIPoint2D(0, 0));
+
+  update();
+}
+
+//---
+
+void
+CQImageView::
+setOffset(const CIPoint2D &offset)
+{
+  view_.setOffset(offset);
+
+  Q_EMIT offsetChanged();
+}
+
+int
+CQImageView::
+getScale() const
+{
+  return view_.getScale();
+}
+
+void
+CQImageView::
+setScale(int scale)
+{
+  view_.setScale(scale);
+
+  update();
+
+  Q_EMIT scaleChanged();
 }
 
 //-----

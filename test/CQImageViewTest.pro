@@ -28,6 +28,7 @@ INCLUDEPATH += \
 ../../CQUtil/include \
 ../../CImageLib/include \
 ../../CFont/include \
+../../CFileUtil/include \
 ../../CFile/include \
 ../../CMath/include \
 ../../CStrUtil/include \

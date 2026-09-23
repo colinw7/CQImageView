@@ -5,6 +5,10 @@
 #include <CImageLib.h>
 
 class CQImageView;
+class CQIconButton;
+class CQRealSpin;
+class CQIntegerSpin;
+
 class QFrame;
 class QLabel;
 class QCheckBox;
@@ -15,12 +19,21 @@ class CQImageViewTest : public QDialog {
  public:
   CQImageViewTest();
 
-  void addImage(const char *fileName);
+  bool addImage(const char *fileName);
 
   void loadImage();
 
- private slots:
+ private:
+  void createToolBar();
+  void createControlFrame();
+  void createStatus();
+
+  void resizeEvent(QResizeEvent *) override;
+
+ private Q_SLOTS:
   void imagePositionSlot(int x, int y);
+
+  void scaleViewSlot();
 
   void nextSlot();
   void prevSlot();
@@ -33,25 +46,63 @@ class CQImageViewTest : public QDialog {
   void blueSlot();
   void alphaSlot();
 
-  void gridSlot();
-  void autoSizeSlot();
+  void scaleSlot(int);
+  void gridSlot(int);
+  void autoSizeSlot(int);
+  void autoScaleSlot(int);
 
+  void settingsSlot(bool);
+
+ public Q_SLOTS:
+  void updateSize();
   void updateState();
 
  private:
-  using NameList  = std::vector<std::string>;
-  using ImageList = std::vector<CImagePtr>;
+  // image data
+  struct ImageData {
+    std::string fileName;
+    CImagePtr   image;
+    bool        loaded { false };
+    bool        valid  { false };
+  };
 
-  QFrame      *control_       { nullptr };
-  CQImageView *view_          { nullptr };
-  QLabel      *colorLabel_    { nullptr };
-  QPushButton *nextButton_    { nullptr };
-  QPushButton *prevButton_    { nullptr };
-  QCheckBox   *gridCheck_     { nullptr };
-  QCheckBox   *autoSizeCheck_ { nullptr };
-  int          imageNum_      { 0 };
-  NameList     names_;
-  ImageList    images_;
+  using ImageList = std::vector<ImageData>;
+
+  int       imageNum_ { 0 };
+  ImageList images_;
+
+  // widgets
+  CQImageView* view_ { nullptr };
+
+  struct ControlWidgets {
+    QFrame*      frame      { nullptr };
+    QPushButton* nextButton { nullptr };
+    QPushButton* prevButton { nullptr };
+  };
+
+  struct ToolbarWidgets {
+    QFrame*        frame          { nullptr };
+    CQIconButton*  nextButton     { nullptr };
+    CQIconButton*  prevButton     { nullptr };
+    CQIntegerSpin* scaleSpin      { nullptr };
+    CQIconButton*  settingsButton { nullptr };
+  };
+
+  struct StatusWidgets {
+    QFrame* frame      { nullptr };
+    QLabel* nameLabel  { nullptr };
+    QLabel* sizeLabel  { nullptr };
+    QLabel* colorLabel { nullptr };
+  };
+
+  ToolbarWidgets toolbarWidgets_;
+  ControlWidgets controlWidgets_;
+  StatusWidgets  statusWidgets_;
+
+  int viewWidth_  { -1 };
+  int viewHeight_ { -1 };
+
+  bool sizeInited_ { false };
 };
 
 #endif

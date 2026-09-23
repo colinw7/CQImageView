@@ -146,8 +146,8 @@ pixelToImage(int px, int py, int &ix, int &iy)
     iy = py - offset_.y;
   }
 
-  int iw = int(image_->getWidth ());
-  int ih = int(image_->getHeight());
+  int iw = (image_ ? int(image_->getWidth ()) : 0);
+  int ih = (image_ ? int(image_->getHeight()) : 0);
 
   if (ix < 0 || ix >= iw || iy < 0 || iy >= ih)
     return false;
